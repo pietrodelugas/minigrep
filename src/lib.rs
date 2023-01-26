@@ -100,17 +100,17 @@ pub fn run (conf: &Config, ifile: usize) -> Result<(),Box<dyn Error>>{
     let res= if conf.how_many_files() == 0 {
           let fin = std::io::stdin(); 
           let buffer:BufReader<Stdin> = std::io::BufReader::new(fin);
-          grep_from_buffer(conf, buffer, "")  
+          grep_from_buffer(conf, buffer, "")? 
         } else {
             let files:Vec<&str> = conf.path.split_whitespace().collect(); 
             let path = files[ifile];
             let fin = fs::File::open(path)?; 
             let buffer=  std::io::BufReader::new(fin); 
             let displaypath = if conf.how_many_files() == 1 {""} else{path}; 
-            grep_from_buffer(conf, buffer, displaypath)
+            grep_from_buffer(conf, buffer, displaypath)?
             //grep_from_string_of_lines(conf, ifile)  
         }; 
-        res
+        Ok(res)
 }
     
 pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, path: &str) -> Result<(),Box<dyn Error>>{
