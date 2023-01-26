@@ -1,13 +1,9 @@
-[package]
-name = "minigrep"
-version = "0.4.0"
-edition = "2021"
-
-# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
-
-[dependencies]
-regex="1.7.0"
-
-[profile.release]
-opt-level= 3
-debug = false
+questo è un file di prova
+per vedere come funziona
+il mio minigrep 
+e fare delle prove con il rUst
+una paio di lettere alla rinfusa
+comunque 
+rust è un linguaggio molto cervellotico
+bisogna stare attenti a tante fisime 
+che poi uno si stanca
