@@ -22,6 +22,7 @@ pub struct Config{
 #[derive(PartialEq)]
 enum MyStatus{
     Printing,
+    SingleLine,
     Silent,
 }
 
@@ -127,7 +128,11 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
     let mut veclinee:Vec<OneLine> =  vec![];
     let pathformat = if path=="" {""} else {":"};
     let mut countafterlines = 0;  
-    let mut status =MyStatus::Silent;
+    let mut status = if (conf.afterlines == 0) & (conf.beforelines == 0)  {
+        MyStatus::SingleLine
+    } else { 
+        MyStatus::Silent
+    }; 
     loop {
         let linea = match linee.next() {
             Some(linea) => linea,
@@ -144,19 +149,17 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
         if veclinee.len() >= max_storedlines {
             let linea = veclinee.pop().expect("qui non dovrebbe crashare");  
             if linea.prints(){
-                status = MyStatus::Printing; 
-                let linea = linea.to_string();
-                if conf.color{
-                    let temp = re.replace_all(&linea, "\x1B[31m$0\x1B[0m").to_string(); 
-                    println!{"\x1B[33m{path}\x1B[0m{pathformat}{temp}"}
-                } else {
-                    println!{"{}{}{}", path, pathformat, linea}
-                }
+                if let MyStatus::Silent  = status {
+                    status = MyStatus::Printing
+                } 
+                print_linea(linea, &re, &conf.color, &false, path, pathformat);
+                //status = MyStatus::Printing;
+
             } else {
-                if status == MyStatus::Printing {
+                if let MyStatus::Printing = status{
                     println!{"---"}
+                    status = MyStatus::Silent 
                 }
-                status = MyStatus::Silent 
             }
         } 
         let linea = linea?; 
@@ -264,7 +267,6 @@ fn spot_parameters_and_values(stringa: &String, expect_value: &mut bool) -> bool
 }
 
 fn print_linea(linea: OneLine, re: &Regex, color: &bool, number: &bool, path: &str, pathformat: &str ){
-    dbg!{number};
     if ! linea.prints() {
         return 
     } 
