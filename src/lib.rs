@@ -137,16 +137,8 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
                         Some(line) => line,
                         None => break,
                     };
-                    if linea.prints(){
-                        let linea = linea.to_string();
-                        if conf.color{
-                            let temp = re.replace_all(&linea, "\x1B[31m$0\x1B[0m").to_string(); 
-                            println!{"\x1B[33m{path}\x1B[0m{pathformat}{temp}"}
-                        } else {
-                            println!{"{}{}{}", path, pathformat, linea}
-                        }
-                    }
-                }
+                    print_linea(linea, &re, &conf.color, &false, path, pathformat);
+                                    }
                 break}, 
         }; 
         if veclinee.len() >= max_storedlines {
@@ -195,7 +187,7 @@ pub fn grep_from_string_of_lines(conf: &Config, ifile: usize) -> Result<(), Box<
     let path = files[ifile];
     let linee = read_to_string(path)?;
     let re = match conf.ignore_case{
-        true => {
+        true => { 
             let pattern = format!("(?i){}",conf.pattern);
             Regex::new(&pattern).unwrap()
         },
@@ -269,6 +261,20 @@ fn spot_parameters_and_values(stringa: &String, expect_value: &mut bool) -> bool
         &_  => false, 
     }; 
     res
+}
+
+fn print_linea(linea: OneLine, re: &Regex, color: &bool, number: &bool, path: &str, pathformat: &str ){
+    dbg!{number};
+    if ! linea.prints() {
+        return 
+    } 
+    let line = linea.to_string(); 
+    if *color{
+        let temp = re.replace_all(&line, "\x1B[31m$0\x1B[0m").to_string(); 
+        println!{"\x1B[33m{path}\x1B[0m{pathformat}{temp}"}
+    } else {
+        println!{"{}{}{}", path, pathformat, line}
+    }
 } 
 
 #[cfg(test)]
