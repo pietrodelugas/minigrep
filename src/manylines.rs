@@ -1,10 +1,10 @@
 use std::{fmt::Display, collections::VecDeque};
 
 #[derive(Clone,Debug)]
-pub struct OneLine(pub String, bool, bool);
+pub struct OneLine(pub String, bool, bool, i32);
 impl OneLine {
-    pub fn new(line: String, prints: bool, matches: bool) -> Self{
-        Self{0: line, 1: prints, 2: matches} 
+    pub fn new(line: String, prints: bool, matches: bool, linenum: i32) -> Self{
+        Self{0: line, 1: prints, 2: matches, 3: linenum} 
     }
     pub fn prints(&self) -> bool{
         self.1
@@ -16,11 +16,15 @@ impl OneLine {
         } 
     }
     
+    pub fn lnum(&self) -> i32 {
+        self.3
+    }
+    
 }
 
 impl Default for OneLine {
     fn default() -> Self {
-        Self::new("".to_string(),false, false)
+        Self::new("".to_string(),false, false,0)
     }
 }
 

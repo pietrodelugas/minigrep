@@ -15,6 +15,7 @@ pub struct Config{
     path:    String,
     ignore_case: bool,
     color: bool,
+    linenumber:bool, 
     afterlines: usize,
     beforelines:usize, 
 }
@@ -49,9 +50,10 @@ impl Config{
         };
         let ignore_case = env::var("IGNORE_CASE").is_ok() || env::args().filter(|stringa| stringa=="-i").count()>0 ;
         let color = env::args().filter(|stringa| stringa=="--color").count()>0; 
+        let linenumber: bool = env::args().filter(|stringa| stringa == "-n" ).count()>0;
         let afterlines:usize =  search_string_interator(std::env::args(), &"-A").unwrap_or(0);
         let beforelines:usize = search_string_interator(std::env::args(), &"-B").unwrap_or(0);
-        Ok(Config{pattern,path, ignore_case,color,afterlines, beforelines})
+        Ok(Config{pattern,path, ignore_case,color, linenumber, afterlines, beforelines})
     }
         
     pub fn read_from_stdin(self: &Config) ->bool{
@@ -133,9 +135,13 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
     } else { 
         MyStatus::Silent
     }; 
+    let mut lnum:i32 = 0;
     loop {
         let linea = match linee.next() {
-            Some(linea) => linea,
+            Some(linea) => {
+                lnum +=1;
+                linea
+            },
             None => {
                 loop{
                     let linea = match veclinee.pop(){
@@ -152,7 +158,7 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
                 if let MyStatus::Silent  = status {
                     status = MyStatus::Printing
                 } 
-                print_linea(linea, &re, &conf.color, &false, path, pathformat);
+                print_linea(linea, &re, &conf.color, &conf.linenumber, path, pathformat);
                 //status = MyStatus::Printing;
 
             } else {
@@ -171,7 +177,7 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
             }
         }
         let prints = countafterlines > 0;
-        let newline =OneLine::new(linea, prints, is_match); 
+        let newline =OneLine::new(linea, prints, is_match, lnum); 
         let mut temp = vec![newline]; 
         //dbg!(veclinee.len());
         if veclinee.len() > 0{
@@ -270,10 +276,16 @@ fn print_linea(linea: OneLine, re: &Regex, color: &bool, number: &bool, path: &s
     if ! linea.prints() {
         return 
     } 
+    let numstr:String = if *number{
+        let lnum = linea.lnum();
+        format!{" \x1B[34m{lnum}\x1B[0m  ",}
+    } else {
+        "".to_string()
+    };
     let line = linea.to_string(); 
     if *color{
         let temp = re.replace_all(&line, "\x1B[31m$0\x1B[0m").to_string(); 
-        println!{"\x1B[33m{path}\x1B[0m{pathformat}{temp}"}
+        println!{"\x1B[33m{path}\x1B[0m{pathformat}{numstr}{temp}"}
     } else {
         println!{"{}{}{}", path, pathformat, line}
     }
