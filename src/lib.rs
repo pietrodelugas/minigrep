@@ -143,22 +143,25 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
                 linea
             },
             None => {
-                loop{
-                    let linea = match veclinee.pop(){
-                        Some(line) => line,
-                        None => break,
-                    };
-                    print_linea(linea, &re, &conf.color, &false, path, pathformat);
+                let mut iter_last_lines = veclinee.iter(); 
+                loop {
+                    let linea = match iter_last_lines.next(){
+                        Some(linea) => linea,
+                        None => {
+                            break;
+                        }
+                    }; 
+                    print_linea(linea, &re, &conf.color, &conf.linenumber, path, pathformat);
                                     }
                 break}, 
         }; 
         if veclinee.len() >= max_storedlines {
-            let linea = veclinee.pop().expect("qui non dovrebbe crashare");  
+            let linea = veclinee.remove(0);  
             if linea.prints(){
                 if let MyStatus::Silent  = status {
                     status = MyStatus::Printing
                 } 
-                print_linea(linea, &re, &conf.color, &conf.linenumber, path, pathformat);
+                print_linea(&linea, &re, &conf.color, &conf.linenumber, path, pathformat);
                 //status = MyStatus::Printing;
 
             } else {
@@ -178,13 +181,7 @@ pub fn grep_from_buffer<T: std::io::Read>(conf: &Config, buffer: BufReader<T>, p
         }
         let prints = countafterlines > 0;
         let newline =OneLine::new(linea, prints, is_match, lnum); 
-        let mut temp = vec![newline]; 
-        //dbg!(veclinee.len());
-        if veclinee.len() > 0{
-            let slicelen = (max_storedlines-1).min(veclinee.len()); 
-            temp.extend_from_slice(&veclinee[0..slicelen]);
-        } 
-        veclinee = temp;
+        veclinee.push(newline);        
         //dbg!{&veclinee};
     };
     //dbg!(conf.beforelines);
@@ -272,7 +269,7 @@ fn spot_parameters_and_values(stringa: &String, expect_value: &mut bool) -> bool
     res
 }
 
-fn print_linea(linea: OneLine, re: &Regex, color: &bool, number: &bool, path: &str, pathformat: &str ){
+fn print_linea(linea: &OneLine, re: &Regex, color: &bool, number: &bool, path: &str, pathformat: &str ){
     if ! linea.prints() {
         return 
     } 
@@ -397,13 +394,13 @@ mod tests{
    #[test]
    fn create_and_read_oneline(){
        let myline = String::from("rust è un linguaggio cervellotico");
-       let prova = super::manylines::OneLine::new(myline, true, false); 
+       let prova = super::manylines::OneLine::new(myline, true, false, 1); 
        assert_eq!(prova.to_string(),"rust è un linguaggio cervellotico")
    }
    #[test]
    fn toggle_oneline_prints(){
        let myline = String::from("fanculo al rust");
-       let mut prova = super::manylines::OneLine::new(myline, false, false); 
+       let mut prova = super::manylines::OneLine::new(myline, false, false,1); 
        let check_1 = prova.prints();
        assert_eq!(check_1, false);
        prova.toggle_prints();
