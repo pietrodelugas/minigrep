@@ -5,5 +5,5 @@ e fare delle prove con il rUst
 una paio di lettere alla rinfusa
 comunque 
 rust è un linguaggio molto cervellotico
-bisogna stare attenti a tante fisime 
+bisogna stare attenti a così tante fisime 
 che poi uno si stanca
